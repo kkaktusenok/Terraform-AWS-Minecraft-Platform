@@ -18,9 +18,10 @@ data "aws_ami" "ubuntu"{
 resource "aws_instance" "app_server" {
   ami = data.aws_ami.ubuntu.id
   instance_type = "t3.micro"
+  subnet_id = aws_subnet.mine_subnet.id
 
   tags = {
-    Name = "terraform-learn"
+    Name = "mine-terraform_instance"
   }
   
 }

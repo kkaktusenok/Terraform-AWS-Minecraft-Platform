@@ -1,0 +1,35 @@
+{
+  "variables": {
+    "aws_region": "us-west-1"
+  },
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "region": "{{user `aws_region`}}",
+      "source_ami_filter": {
+        "filters": {
+          "name": "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*",
+          "root-device-type": "ebs",
+          "virtualization-type": "hvm"
+        },
+        "most_recent": true,
+        "owners": "099720109477"
+      },
+      "instance_type": "t3.micro",
+      "ssh_username": "ubuntu",
+      "ami_name": "minecraft-papermc-{{timestamp}}",
+      "ami_description": "PaperMC 1.21.5 + Java 17 + systemd",
+      "tags": {
+        "Name": "Golden-Minecraft-AMI",
+        "BuiltBy": "Packer"
+      }
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "sudo apt update -y",
+        "sudo apt install -y openjdk-17-jre-headless wget",
+        "mkdir -p /home/ubuntu/minecraft",
+   

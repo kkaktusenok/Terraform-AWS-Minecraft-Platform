@@ -10,7 +10,7 @@ data "http" "myip" {
 
 resource "aws_security_group" "ssh" {
   name   = "${local.name}-ssh"
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.main_vpc.id
 
   ingress {
     from_port = 22
@@ -32,15 +32,24 @@ resource "aws_security_group" "ssh" {
 }
 
 resource "aws_security_group" "minecraft" {
-  name   = "${local.name}-minecraft"
-  vpc_id = aws_vpc.main.id
+  name        = "${local.name}-all"
+  description = "SSH + Minecraft + egress"
+  vpc_id      = aws_vpc.main_vpc.id
 
   ingress {
+    description = "SSH from internet"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Minecraft from internet"
     from_port   = 25565
     to_port     = 25565
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # потом заменишь на Cloudflare или свой IP
-    description = "Minecraft port"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
@@ -50,5 +59,5 @@ resource "aws_security_group" "minecraft" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = merge(local.tags, { Name = "${local.name}-sg-minecraft" })
+  tags = { Name = "${local.name}-sg" }
 }

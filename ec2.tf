@@ -7,7 +7,7 @@ data "aws_ami" "ubuntu" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
   }
 
   filter {
@@ -18,10 +18,11 @@ data "aws_ami" "ubuntu" {
 
 # Сам сервер (пока в public подсети, потом перенесём в private)
 resource "aws_instance" "minecraft" {
-  ami           = data.aws_ami.ubuntu.id
-  instance_type = var.instance_type
-  key_name      = aws_key_pair.minecraft.key_name
-  subnet_id     = aws_subnet.public[0].id
+  ami                         = "ami-073547175b8ce1fd9" #data.aws_ami.ubuntu.id
+  instance_type               = var.instance_type
+  key_name                    = aws_key_pair.minecraft.key_name
+  subnet_id                   = aws_subnet.public[0].id
+  associate_public_ip_address = true
   vpc_security_group_ids = [
     aws_security_group.ssh.id,
     aws_security_group.minecraft.id
@@ -30,7 +31,4 @@ resource "aws_instance" "minecraft" {
   tags = merge(local.tags, {
     Name = "${local.name}-server"
   })
-
-  # Пока просто проверка, что заходит
-  user_data = file("${path.module}/user-data/minecraft.sh")
 }

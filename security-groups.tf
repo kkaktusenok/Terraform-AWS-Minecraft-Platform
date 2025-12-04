@@ -17,7 +17,7 @@ resource "aws_security_group" "ssh" {
     to_port   = 22
     protocol  = "tcp"
     # chomp убирает \n в конце, теперь точно чистый IP
-    cidr_blocks = ["${chomp(data.http.myip.response_body)}/32"]
+    cidr_blocks = ["0.0.0.0/0"]
     description = "SSH only from my current IP"
   }
 
@@ -31,7 +31,7 @@ resource "aws_security_group" "ssh" {
   tags = merge(local.tags, { Name = "${local.name}-sg-ssh" })
 }
 
-resource "aws_security_group" "minecraft" {
+resource "aws_security_group" "minecraft" {-
   name        = "${local.name}-all"
   description = "SSH + Minecraft + egress"
   vpc_id      = aws_vpc.main_vpc.id

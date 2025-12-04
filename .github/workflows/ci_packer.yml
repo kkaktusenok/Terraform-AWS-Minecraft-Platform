@@ -1,0 +1,48 @@
+name: 1. CI - Build Golden AMI (Packer)
+
+on:
+  push:
+    branches:
+      - main # Запускается при push в ветку main
+    paths:
+      - 'packer/minecraft.json' # Запускается, только если изменен файл Packer
+
+jobs:
+  build-ami:
+    runs-on: ubuntu-latest
+    
+    # Настройка переменных среды AWS из GitHub Secrets
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@main
+
+      - name: Run Packer Build
+        id: build
+        # Запуск Packer для создания нового AMI
+        run: |
+          packer build -color=false packer/minecraft.json > packer_output.txt
+          
+      - name: Extract AMI ID
+        # Извлекаем ID созданного AMI из логов Packer 
+        id: ami_id
+        run: |
+          # В реальной работе парсинг должен быть точным. Это упрощенный пример.
+          AMI_ID=$(grep 'A new AMI was created' packer_output.txt | awk '{print $NF}')
+          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
+          
+      # ➡️ Шаг для запуска следующего пайплайна (CD)
+      - name: Trigger CD Deployment
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.GH_DISPATCH_TOKEN }} # Нужен отдельный токен GITHUB_TOKEN для вызова API
+          event-type: deploy-infrastructure
+          # Передаем ID нового AMI в CD-пайплайн
+          client-payload: '{"ami_id": "${{ env.AMI_ID }}"}'

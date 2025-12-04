@@ -31,7 +31,7 @@ resource "aws_security_group" "ssh" {
   tags = merge(local.tags, { Name = "${local.name}-sg-ssh" })
 }
 
-resource "aws_security_group" "minecraft" {-
+resource "aws_security_group" "minecraft" {
   name        = "${local.name}-all"
   description = "SSH + Minecraft + egress"
   vpc_id      = aws_vpc.main_vpc.id

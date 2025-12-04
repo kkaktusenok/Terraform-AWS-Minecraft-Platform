@@ -1,20 +1,21 @@
+# .github/workflows/ci_packer.yml
 name: 1. CI - Build Golden AMI (Packer)
 
 on:
   push:
     branches:
-      - main # Запускается при push в ветку main
+      - main
     paths:
-      - 'packer/minecraft.json' # Запускается, только если изменен файл Packer
+      - 'packer/minecraft.json'
 
 jobs:
   build-ami:
     runs-on: ubuntu-latest
     
-    # Настройка переменных среды AWS из GitHub Secrets
+    # ИСПРАВЛЕНО: Убедитесь, что имена секретов AWS верны
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # <-- ИСПРАВЛЕНО
       AWS_REGION: ${{ secrets.AWS_REGION }}
 
     steps:
@@ -26,23 +27,29 @@ jobs:
 
       - name: Run Packer Build
         id: build
-        # Запуск Packer для создания нового AMI
-        run: |
-          packer build -color=false packer/minecraft.json > packer_output.txt
-          
+        # Выполняем сборку и сохраняем вывод для парсинга
+        run: packer build -color=false packer/minecraft.json | tee packer_output.txt
+
       - name: Extract AMI ID
-        # Извлекаем ID созданного AMI из логов Packer 
         id: ami_id
+        # Простой парсинг ID AMI
         run: |
-          # В реальной работе парсинг должен быть точным. Это упрощенный пример.
           AMI_ID=$(grep 'A new AMI was created' packer_output.txt | awk '{print $NF}')
-          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
+          echo "ami_id=$AMI_ID" >> $GITHUB_OUTPUT
           
-      # ➡️ Шаг для запуска следующего пайплайна (CD)
+      # Шаг 1. Передача AMI ID через файл (для CD)
+      - name: Create AMI ID Artifact
+        run: echo "${{ steps.ami_id.outputs.ami_id }}" > ami_id.txt
+
+      - name: Upload AMI ID Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ami-id-artifact
+          path: ami_id.txt
+
+      # ➡️ Шаг 2. Запуск следующего пайплайна (CD)
       - name: Trigger CD Deployment
         uses: peter-evans/repository-dispatch@v3
         with:
-          token: ${{ secrets.GH_DISPATCH_TOKEN }} # Нужен отдельный токен GITHUB_TOKEN для вызова API
+          token: ${{ secrets.GH_DISPATCH_TOKEN }}
           event-type: deploy-infrastructure
-          # Передаем ID нового AMI в CD-пайплайн
-          client-payload: '{"ami_id": "${{ env.AMI_ID }}"}'

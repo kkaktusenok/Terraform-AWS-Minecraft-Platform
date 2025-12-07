@@ -124,9 +124,8 @@ To fully document the deployment, include the following screenshots in this sect
 
 * Packer build output showing the **AMI ID** created.
 * <img width="1131" height="562" alt="image" src="https://github.com/user-attachments/assets/065dbbb8-1248-44da-80fb-d5776f37952f" />
-* Output of `terraform apply -auto-approve` showing **S3 bucket creation** during the initial setup.
-* `terraform init` output showing the **prompt for state migration**.
-* Final output of `terraform apply` showing the creation of the **EC2 instance** and network resources.
+* **Terraform Apply Output:** Screenshot(s) of the command `cd .. && terraform init && terraform apply -auto-approve` (or similar sequences) showing the **prompt for state migration**, and the creation of **S3 Bucket resources (initial setup)** and the **EC2 instance/network (final deployment)**.
+* <img width="1345" height="544" alt="image" src="https://github.com/user-attachments/assets/a1b2fa52-cec9-4a2c-b983-2554f7fb38ab" />
 
 ---
 

@@ -72,7 +72,6 @@ Before deploying the EC2 instance, you must build the initial **"Golden AMI"** u
     ```bash
     packer build minecraft.json
     ```
-    [Screenshot: Packer build output showing the AMI ID created]
 4.  Return to the root directory:
     ```bash
     cd ..
@@ -88,7 +87,6 @@ To successfully initialize your local state and prepare the remote S3 bucket for
     terraform init
     terraform apply -auto-approve
     ```
-    [Screenshot: Output of `terraform apply -auto-approve` showing S3 bucket creation]
 
 ### 3. Migrate State to S3 Backend
 
@@ -97,7 +95,6 @@ To successfully initialize your local state and prepare the remote S3 bucket for
     ```bash
     terraform init
     ```
-    [Screenshot: `terraform init` output showing the prompt for state migration]
 
 ### 4. Deploy the Infrastructure with Terraform
 
@@ -108,7 +105,6 @@ Now that the AMI is built and the state is configured, deploy the EC2 instance a
     terraform init
     terraform apply -auto-approve
     ```
-    [Screenshot: Output of `terraform apply` showing the creation of the EC2 instance and network resources]
 
 ---
 
@@ -119,6 +115,17 @@ To update the server (e.g., change the Minecraft version or server configuration
 1.  **Update Packer Template:** Modify the configuration in `packer/minecraft.json`.
 2.  **Rebuild AMI:** Run the Packer build command again (from step 1 above) to create a new AMI.
 3.  **Redeploy with Terraform:** Run `terraform apply` again. Terraform will detect the new AMI ID and perform a **replacement** of the EC2 instance, implementing a zero-downtime update.
+
+---
+
+## 📸 Screenshots
+
+To fully document the deployment, include the following screenshots in this section:
+
+* Packer build output showing the **AMI ID** created.
+* Output of `terraform apply -auto-approve` showing **S3 bucket creation** during the initial setup.
+* `terraform init` output showing the **prompt for state migration**.
+* Final output of `terraform apply` showing the creation of the **EC2 instance** and network resources.
 
 ---
 

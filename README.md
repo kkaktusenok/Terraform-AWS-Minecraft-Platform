@@ -123,6 +123,7 @@ To update the server (e.g., change the Minecraft version or server configuration
 To fully document the deployment, include the following screenshots in this section:
 
 * Packer build output showing the **AMI ID** created.
+* <img width="1131" height="562" alt="image" src="https://github.com/user-attachments/assets/065dbbb8-1248-44da-80fb-d5776f37952f" />
 * Output of `terraform apply -auto-approve` showing **S3 bucket creation** during the initial setup.
 * `terraform init` output showing the **prompt for state migration**.
 * Final output of `terraform apply` showing the creation of the **EC2 instance** and network resources.

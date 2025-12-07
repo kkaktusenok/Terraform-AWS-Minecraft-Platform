@@ -29,8 +29,8 @@ This solution demonstrates expertise in the following areas:
 
 * An AWS Account with Access Key ID and Secret Access Key.
 * **Terraform** ($\ge 1.0$) and **Packer** ($\ge 1.7$) installed locally.
-* AWS CLI configured with a **named profile** (e.g., `danvscode`).
-* **IAM Role/User for Packer:** Профиль AWS, используемый Packer (указанный как `aws_profile` в `packer/minecraft.json`), должен иметь разрешения для создания экземпляров EC2, AMI и управления необходимыми ресурсами.
+* AWS CLI configured with a **named profile** (e.g., `my-dev-profile`).
+* **IAM Role/User for Packer:** The AWS profile used by Packer must have permissions to create EC2 instances, AMIs, and manage necessary resources. **This profile name must be set by the user** in the `aws_profile` variable within the Packer template (`packer/minecraft.json`).
 
 ---
 
@@ -38,10 +38,10 @@ This solution demonstrates expertise in the following areas:
 
 ### 1. Initialize Backend Resources
 
-Для успешной миграции состояния сначала создайте бакет S3.
+To successfully migrate the state, we first create the S3 bucket.
 
-1.  **Временно закомментируйте** блок `backend "s3"` в `backend.tf`.
-2.  Выполните первоначальную настройку для создания удаленного бакета состояния:
+1.  **Temporarily comment out** the `backend "s3"` block in `backend.tf`.
+2.  Run the initial setup to create the remote state bucket:
     ```bash
     terraform init
     terraform apply -auto-approve
@@ -49,7 +49,7 @@ This solution demonstrates expertise in the following areas:
 
 ### 2. Migrate State to S3
 
-1.  **Раскомментируйте** блок `backend "s3"` в `backend.tf`. Убедитесь, что `profile` установлен правильно.
+1.  **Uncomment** the `backend "s3"` block in `backend.tf`. Ensure the `profile` is set correctly.
 2.  Run the migration command:
     ```bash
     terraform init -migrate-state
@@ -63,11 +63,15 @@ Before deploying the EC2 instance, you must build the initial **"Golden AMI"** u
     ```bash
     cd packer
     ```
-2.  Build the AMI, ensuring you specify your configured **AWS profile** via the variable:
-    ```bash
-    packer build -var 'aws_profile=YOUR_AWS_PROFILE_NAME' minecraft.json
+2.  **Set your AWS Profile:** Open `minecraft.json` and set your desired AWS CLI profile name in the `aws_profile` variable:
+    ```json
+    "aws_profile": "YOUR_AWS_PROFILE_NAME"
     ```
-    *(**Note:** Replace `YOUR_AWS_PROFILE_NAME` with the name of your AWS CLI profile, e.g., `danvscode`)*
+    *(**Note:** Replace `YOUR_AWS_PROFILE_NAME` with the name of your configured AWS CLI profile, e.g., `my-dev-profile`)*
+3.  Build the AMI:
+    ```bash
+    packer build minecraft.json
+    ```
 
 ### 4. Deploy the Infrastructure with Terraform
 

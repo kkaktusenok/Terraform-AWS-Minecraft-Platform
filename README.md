@@ -6,6 +6,24 @@ The goal is to demonstrate a robust process for managing an **Immutable Infrastr
 
 ---
 
+## ⚡ Quick Start Flow
+
+1.  **Configure:** Open `packer/minecraft.json` and set your `aws_profile`.
+2.  **Build AMI:** Create the Golden AMI containing the server software.
+    ```bash
+    cd packer && packer build minecraft.json
+    ```
+3.  **Setup Backend:** Create the remote S3 bucket for state.
+    ```bash
+    cd .. && terraform init && terraform apply -auto-approve
+    ```
+4.  **Deploy Infra:** Deploy the EC2 instance and network resources.
+    ```bash
+    terraform init && terraform apply -auto-approve
+    ```
+
+---
+
 ## 💡 Key Features & Technologies
 
 This solution demonstrates expertise in the following areas:
@@ -18,6 +36,7 @@ This solution demonstrates expertise in the following areas:
 ### Immutable Infrastructure
 * **Packer:** Used to build a **"Golden AMI"** (Amazon Machine Image) that contains the pre-installed Java runtime, Minecraft server software, and systemd service configuration.
     * **Template Path:** The Packer configuration is located at `packer/minecraft.json`.
+* **World Persistence:** The Minecraft world is automatically backed up to S3. **World survives destroy — automatically restored from S3.**
 * **Zero-Downtime Updates:** Any server update (e.g., changing the Minecraft version in the Packer template) triggers the creation of a brand new EC2 instance from the new AMI before destroying the old one.
 
 ### Automation & Local Tools
@@ -27,7 +46,7 @@ This solution demonstrates expertise in the following areas:
 
 ## 🛠️ Prerequisites
 
-* An AWS Account with Access Key ID and Secret Access Key.
+* An AWS account with **SSO or configured profile**.
 * **Terraform** ($\ge 1.0$) and **Packer** ($\ge 1.7$) installed locally.
 * AWS CLI configured with a **named profile** (e.g., `my-dev-profile`).
 * **IAM Role/User for Packer:** The AWS profile used by Packer must have permissions to create EC2 instances, AMIs, and manage necessary resources. **This profile name must be set by the user** in the `aws_profile` variable within the Packer template (`packer/minecraft.json`).
@@ -36,26 +55,7 @@ This solution demonstrates expertise in the following areas:
 
 ## 🚀 Deployment Instructions
 
-### 1. Initialize Backend Resources
-
-To successfully migrate the state, we first create the S3 bucket.
-
-1.  **Temporarily comment out** the `backend "s3"` block in `backend.tf`.
-2.  Run the initial setup to create the remote state bucket:
-    ```bash
-    terraform init
-    terraform apply -auto-approve
-    ```
-
-### 2. Migrate State to S3
-
-1.  **Uncomment** the `backend "s3"` block in `backend.tf`. Ensure the `profile` is set correctly.
-2.  Run the migration command:
-    ```bash
-    terraform init -migrate-state
-    ```
-
-### 3. Build the Golden AMI with Packer
+### 1. Build the Golden AMI with Packer
 
 Before deploying the EC2 instance, you must build the initial **"Golden AMI"** using Packer.
 
@@ -72,20 +72,43 @@ Before deploying the EC2 instance, you must build the initial **"Golden AMI"** u
     ```bash
     packer build minecraft.json
     ```
-
-### 4. Deploy the Infrastructure with Terraform
-
-Once the AMI is built, Terraform can deploy the EC2 instance and all supporting infrastructure.
-
-1.  Return to the root directory:
+    [Screenshot: Packer build output showing the AMI ID created]
+4.  Return to the root directory:
     ```bash
     cd ..
     ```
-2.  Initialize and apply the configuration:
+
+### 2. Initialize Backend Resources (Local State)
+
+To successfully initialize your local state and prepare the remote S3 bucket for migration:
+
+1.  **Temporarily comment out** the `backend "s3"` block in `backend.tf`.
+2.  Run the initial setup to create the remote state bucket:
     ```bash
     terraform init
     terraform apply -auto-approve
     ```
+    [Screenshot: Output of `terraform apply -auto-approve` showing S3 bucket creation]
+
+### 3. Migrate State to S3 Backend
+
+1.  **Uncomment** the `backend "s3"` block in `backend.tf`. Ensure the `profile` is set correctly.
+2.  Run the initialization command. Terraform will detect the change and prompt you to migrate the state to the S3 backend. Confirm the migration when prompted.
+    ```bash
+    terraform init
+    ```
+    [Screenshot: `terraform init` output showing the prompt for state migration]
+
+### 4. Deploy the Infrastructure with Terraform
+
+Now that the AMI is built and the state is configured, deploy the EC2 instance and all supporting infrastructure.
+
+1.  Initialize and apply the configuration:
+    ```bash
+    terraform init
+    terraform apply -auto-approve
+    ```
+    [Screenshot: Output of `terraform apply` showing the creation of the EC2 instance and network resources]
 
 ---
 
@@ -94,7 +117,7 @@ Once the AMI is built, Terraform can deploy the EC2 instance and all supporting 
 To update the server (e.g., change the Minecraft version or server configuration):
 
 1.  **Update Packer Template:** Modify the configuration in `packer/minecraft.json`.
-2.  **Rebuild AMI:** Run the Packer build command again (from step 3 above) to create a new AMI.
+2.  **Rebuild AMI:** Run the Packer build command again (from step 1 above) to create a new AMI.
 3.  **Redeploy with Terraform:** Run `terraform apply` again. Terraform will detect the new AMI ID and perform a **replacement** of the EC2 instance, implementing a zero-downtime update.
 
 ---
@@ -104,4 +127,4 @@ To update the server (e.g., change the Minecraft version or server configuration
 To destroy all AWS resources created by Terraform:
 
 ```bash
-terraform destroy
+terraform destroy -auto-approve
